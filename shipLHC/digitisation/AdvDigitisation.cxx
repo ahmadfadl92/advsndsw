@@ -83,6 +83,16 @@ std::map<std::string, std::vector<Int_t>> AdvDigitisation::digirunoutput(Int_t d
         });
     DigitisedHit["Strips"] = Strips; 
     DigitisedHit["ADC"] = ADC; 
+
+    // Strips carrying this group's own signal: "Strips" also holds noise, which has no truth link.
+    std::vector<Double_t> SignalCharge = ResponseSignal.getIntegratedSignal();
+    std::vector<Int_t> SignalInStrips = ResponseSignal.getStrips();
+    std::vector<Int_t> SignalStrips;
+    for (size_t i = 0; i < SignalCharge.size(); i++)
+    {
+        if (SignalCharge[i] > 0) SignalStrips.push_back(SignalInStrips[i]);
+    }
+    DigitisedHit["SignalStrips"] = SignalStrips;
     
     return DigitisedHit;
 }

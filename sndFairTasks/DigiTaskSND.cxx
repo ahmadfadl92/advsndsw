@@ -218,7 +218,7 @@ void DigiTaskSND::digitiseAdvTarget()
     std::map<int, std::vector<std::map<std::string, std::vector<Int_t>>>> module_collector{};// a map of unique module_id and hits
     Hit2MCPoints mc_links;
     std::map<int, std::map<int, double>> mc_points{};
-    std::map<int, double> norm{};
+    std::map<int, std::map<int, double>> digi_points{};   // written strip ID -> contributing point -> energy loss
 
     AdvDigitisation advdigi{};
 
@@ -273,7 +273,6 @@ void DigiTaskSND::digitiseAdvTarget()
         // Collect points by virtual strip
         hit_collector[detector_id].emplace_back(point);
         mc_points[detector_id][point_index++] = point->GetEnergyLoss();
-        norm[detector_id] += point->GetEnergyLoss();
     }
     for (const auto& [detector_id, points] : hit_collector) {
 
@@ -287,11 +286,13 @@ void DigiTaskSND::digitiseAdvTarget()
             StripNoise::detids.erase(it);
         }
         // Make one hit per virtual strip (detector ID module + strip)
-        module_collector[module_map[detector_id]].emplace_back(advdigi.digirunoutput(detector_id, points));
-        auto point_map = mc_points[detector_id];
-        for (const auto& [point_id, energy_loss] : point_map) {
-            mc_links.Add(detector_id, point_id, energy_loss / norm[detector_id]);
+        auto digitised = advdigi.digirunoutput(detector_id, points);
+        for (int signal_strip : digitised.at("SignalStrips")) {
+            for (const auto& [point_id, energy_loss] : mc_points[detector_id]) {
+                digi_points[(detector_id & ~0x3FF) | signal_strip][point_id] = energy_loss;
+            }
         }
+        module_collector[module_map[detector_id]].emplace_back(digitised);
     }
     for (const auto detector_id : StripNoise::detids)
     {
@@ -299,8 +300,6 @@ void DigiTaskSND::digitiseAdvTarget()
         module_collector[module_map[detector_id]].emplace_back(advdigi.digirunoutput(detector_id));
     }
 
-
-    new ((*AdvTargetHits2MCPoints)[0]) Hit2MCPoints(mc_links);
 
     // Loop over hits in an unique module and sum the charges per unique strip
     // to form its total integrated charge
@@ -350,10 +349,20 @@ void DigiTaskSND::digitiseAdvTarget()
           auto detector_id = ((detID & ~0x3FF) | (i & 0x3FF));
           AdvHit* aHit = new ((*AdvTargetHits)[hit_index++]) AdvHit(detector_id);
           aHit->SetSignal(Saturate(sum_adc[i]));
+          // Link the written digi to the points that put signal on its strip. Noise digis have no links.
+          auto digi_links = digi_points.find(detector_id);
+          if (digi_links != digi_points.end()) {
+            double total_loss = 0;
+            for (const auto& [point_id, energy_loss] : digi_links->second) total_loss += energy_loss;
+            for (const auto& [point_id, energy_loss] : digi_links->second) {
+              mc_links.Add(detector_id, point_id, energy_loss / total_loss);
+            }
+          }
         }
       }
       
     }
+    new ((*AdvTargetHits2MCPoints)[0]) Hit2MCPoints(mc_links);
     
 }
 
