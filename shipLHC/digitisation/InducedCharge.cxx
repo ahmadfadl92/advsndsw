@@ -65,7 +65,7 @@ AdvSignal InducedCharge::IntegrateCharge(std::vector<SurfaceSignal> DiffusionSig
             }
         }
 
-        Double_t z = accumulate(amplitude.begin(), amplitude.end(), 0);
+        Double_t z = accumulate(amplitude.begin(), amplitude.end(), 0.0);
 
         // Getting the unique strips 
 
@@ -77,8 +77,9 @@ AdvSignal InducedCharge::IntegrateCharge(std::vector<SurfaceSignal> DiffusionSig
         TotalChargeDeposited = TotalSignal.getIntegratedSignal();
         UniqueAffectedStrips = TotalSignal.getStrips();
 
-        Double_t r = accumulate(TotalChargeDeposited.begin(), TotalChargeDeposited.end(), 0);
-        Double_t rescale_ratio = r/z; 
+        Double_t r = accumulate(TotalChargeDeposited.begin(), TotalChargeDeposited.end(), 0.0);
+        // Restores the charge the Nsigma window left out
+        Double_t rescale_ratio = r > 0 ? z/r : 0.0; 
         for (int m = 0; m < UniqueAffectedStrips.size(); m++)
         {
             //the total number of electrons
