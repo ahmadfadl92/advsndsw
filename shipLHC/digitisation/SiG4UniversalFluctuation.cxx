@@ -212,10 +212,9 @@ Double_t SiG4UniversalFluctuation::SampleGlandz()
                     delete[] rndmarray;
                     rndmarray = new Double_t[nnb];                   
                 }
+                gRandom->RndmArray(nnb, rndmarray);
                 for (Int_t k = 0; k < nnb; ++k) {
-                    // check if this loop is needed to handle the NaN values
-                    if(rndmarray[k]!=rndmarray[k]){loss += w3 / (1. - w * 1e-310);}
-                    else{loss += w3 / (1. - w * rndmarray[k]);}
+                    loss += w3 / (1. - w * rndmarray[k]);
                 }
             }
         
