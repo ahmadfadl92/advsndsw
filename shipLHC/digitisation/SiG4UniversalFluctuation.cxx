@@ -122,7 +122,6 @@ Double_t SiG4UniversalFluctuation::SampleFluctuations(Double_t particleMass,
             const Double_t twomeanLoss = meanLoss + meanLoss;
             do {
 
-                gRandom->SetSeed(0);
                 energyLoss = gRandom->Gaus(meanLoss, siga);
                 // 	// Loop checking, 03-Aug-2015, Vladimir Ivanchenko
             } while (0.0 > loss || twomeanLoss < loss);
@@ -130,7 +129,6 @@ Double_t SiG4UniversalFluctuation::SampleFluctuations(Double_t particleMass,
             const Double_t neff = sn * sn;
             TF1 f1("Gamma(x)", "ROOT::Math::tgamma(x)", neff, 1.0);
             double r = f1.GetRandom();
-            gRandom->SetSeed(0);
             energyLoss = meanLoss * r / neff;
         }
         return energyLoss;
@@ -205,7 +203,6 @@ Double_t SiG4UniversalFluctuation::SampleGlandz()
 
         const Double_t w3 = alfa * e0;
         if (tcut > w3) {
-            gRandom->SetSeed(0);
             //TRandom* rndm = static_cast<TRandom*>(gRandom->Clone());
             const Double_t w = (tcut - w3) / tcut;
             const Int_t nnb = (Int_t)gRandom->Poisson(p3);

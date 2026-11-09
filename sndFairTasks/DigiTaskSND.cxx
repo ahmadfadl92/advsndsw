@@ -143,6 +143,8 @@ InitStatus DigiTaskSND::Init()
       AdvMuFilterHits2MCPoints->BypassStreamer(kTRUE);
     }
 
+    if (fDigiSeed == 0) gRandom->SetSeed(0);
+
     StripNoise stripnoise;  
     if (!stripsensor::frontend::NoiseOption)
     {
@@ -169,6 +171,11 @@ InitStatus DigiTaskSND::Init()
 
 void DigiTaskSND::Exec(Option_t* /*opt*/)
 {
+    // One seed per event, so a change in one event's random draws can't shift the noise of later events.
+    if (fDigiSeed != 0) {
+        UInt_t event_seed = (fDigiSeed * 1000003u + fMCEventHeader->GetRunID()) * 1000003u + fMCEventHeader->GetEventID() + 1u;
+        gRandom->SetSeed(event_seed != 0 ? event_seed : 1u);   // SetSeed(0) would mean the clock
+    }
 
     if (fScifiDigiHitArray) {
         fScifiDigiHitArray->Clear("C");

@@ -82,7 +82,6 @@ inline void SiG4UniversalFluctuation::AddExcitation(const Double_t ax,
         eav += ax * ex;
         esig2 += ax * ex * ex;
     } else {
-        gRandom->SetSeed(0);
         const Int_t p = (Int_t)gRandom->Poisson(ax);
         if (p > 0) {
             eloss += ((p + 1) - 2. * gRandom->Uniform()) * ex;
@@ -94,8 +93,7 @@ inline void SiG4UniversalFluctuation::SampleGauss(const Double_t eav, const Doub
 {
     Double_t x = eav;
     const Double_t sig = std::sqrt(esig2);
-    gRandom->SetSeed(0);
-    auto rndm = std::unique_ptr<TRandom>(static_cast<TRandom*>(gRandom->Clone()));
+    TRandom* rndm = gRandom;
     if (eav < 0.25 * sig) {
         x += (2. * rndm->Uniform() - 1.) * eav;
     } else {

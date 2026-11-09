@@ -30,6 +30,7 @@ parser.add_argument("-ss", "--saturationScifi", dest="ss", type=float, help="sat
 parser.add_argument("-tML", "--thresholdMufiL", dest="tml", type=float, help="threshold energy for Mufi large [p.e.]", default=0.0)
 parser.add_argument("-tMS", "--thresholdMufiS", dest="tms", type=float, help="threshold energy for Mufi small [p.e.]", default=0.0)
 parser.add_argument("-cpp", "--digiCPP", action='store_true', dest="FairTask_digi", help="perform digitization using DigiTaskSND", default=True)
+parser.add_argument("-s", "--seed", dest="digiSeed", type=int, help="base seed of DigiTaskSND; 0 = seed from the clock", default=1)
 parser.add_argument("-d", "--Debug", dest="debug", help="debug", default=False)
 
 options = parser.parse_args()
@@ -103,7 +104,9 @@ if options.FairTask_digi:
   nEvents = min(nEventsInFile, options.nEvents)
 
   rtdb = run.GetRuntimeDb()
-  run.AddTask(ROOT.DigiTaskSND())
+  digiTask = ROOT.DigiTaskSND()
+  digiTask.SetDigiSeed(options.digiSeed)
+  run.AddTask(digiTask)
   run.Init()
   run.Run(firstEvent, nEvents)
 

@@ -32,12 +32,17 @@ class DigiTaskSND : public FairTask
     /** Virtual method Exec **/
     virtual void Exec(Option_t* opt);
 
+    /** Base seed of the digitisation: each event is reseeded from it. 0 = seed once from the clock. **/
+    void SetDigiSeed(UInt_t seed) { fDigiSeed = seed; }
+
   private:
     void digitizeMuFilter();
     void digitizeScifi();
     void digitiseAdvTarget();
     void digitiseAdvMuFilter();
     int Saturate(int signal);
+
+    UInt_t fDigiSeed = 1;
 
     Scifi* scifi;
     map<Int_t, map<Int_t, array<float, 2>>> fibresSiPM;
