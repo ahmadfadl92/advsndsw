@@ -310,7 +310,7 @@ void DigiTaskSND::digitiseAdvTarget()
       {
         for(int a =0; a<fDigitisedHit.at("Strips").size(); a++)
         {
-          sum_adc[fDigitisedHit.at("Strips")[a]] = fDigitisedHit.at("ADC")[a];
+          sum_adc[fDigitisedHit.at("Strips")[a]] += fDigitisedHit.at("ADC")[a];
         }
       }// end loop over hits in the same module.
     //   // At this stage one has the total changer per strip in a module.
