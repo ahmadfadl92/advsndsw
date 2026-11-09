@@ -53,13 +53,15 @@ AdvSignal InducedCharge::IntegrateCharge(std::vector<SurfaceSignal> DiffusionSig
 
             for(int j = 0; j < AffectedStrips.size(); j++)
             {
-                y_start = (AffectedStrips[j] - (advsnd::strips / 2))*(advsnd::sensor_length / advsnd::strips) - (stripsensor::inducedcharge::strip_pitch / 2);
-                y_end = (AffectedStrips[j] - (advsnd::strips / 2))*(advsnd::sensor_length / advsnd::strips) + (stripsensor::inducedcharge::strip_pitch / 2);
-                z_start = (y_start - surfacepos[i].Y()) / diffusionarea[j];
-                z_end = abs(y_end - surfacepos[i].Y()) / diffusionarea[j];
+                // Strip cell as in the strip assignment of DigiTaskSND: [(s-384)p, (s-383)p)
+                const Double_t pitch = advsnd::sensor_length / advsnd::strips;
+                y_start = (AffectedStrips[j] - (advsnd::strips / 2)) * pitch;
+                y_end = y_start + pitch;
+                z_start = (y_start - surfacepos[i].Y()) / diffusionarea[i];
+                z_end = (y_end - surfacepos[i].Y()) / diffusionarea[i];
                 integratedcharge = (erf((z_end) / TMath::Sqrt2()) / 2) - (erf((z_start) / TMath::Sqrt2()) / 2);
                 temp_AffectedStrips.push_back(AffectedStrips[j]);
-                ChargeDeposited.push_back(integratedcharge*amplitude[j]);        
+                ChargeDeposited.push_back(integratedcharge*amplitude[i]);        
             }
         }
 
