@@ -33,6 +33,7 @@
 #include <iostream>    // for operator<<, basic_ostream, endl
 #include <vector>      // std::vector
 #include <map>
+#include <set>
 
 using namespace std;
 
@@ -274,17 +275,10 @@ void DigiTaskSND::digitiseAdvTarget()
         hit_collector[detector_id].emplace_back(point);
         mc_points[detector_id][point_index++] = point->GetEnergyLoss();
     }
+    std::set<int> crossed_modules;   // modules with a Geant4 point in this event
     for (const auto& [detector_id, points] : hit_collector) {
 
-        int module_detid = ((detector_id & ~0x3FF) | (0 & 0x3FF));
-        auto it = std::find(StripNoise::detids.begin(),
-                            StripNoise::detids.end(),
-                            module_detid);
-
-        if (it != StripNoise::detids.end())
-        {
-            StripNoise::detids.erase(it);
-        }
+        crossed_modules.insert(detector_id & ~0x3FF);
         // Make one hit per virtual strip (detector ID module + strip)
         auto digitised = advdigi.digirunoutput(detector_id, points);
         for (int signal_strip : digitised.at("SignalStrips")) {
@@ -294,8 +288,10 @@ void DigiTaskSND::digitiseAdvTarget()
         }
         module_collector[module_map[detector_id]].emplace_back(digitised);
     }
+    // Noise-only modules: chosen afresh each event, so a module crossed once still gets noise later
     for (const auto detector_id : StripNoise::detids)
     {
+        if (crossed_modules.count(detector_id)) continue;
         module_map[detector_id] = detector_id; 
         module_collector[module_map[detector_id]].emplace_back(advdigi.digirunoutput(detector_id));
     }
