@@ -28,6 +28,7 @@ void StripNoise::CreateDetIDs()
     TString path = TString::Format("/cave_1/"
                                    "Detector_0/"
                                    "volAdvTarget_0/");
+    detids.clear();   // Init can run more than once per process
     TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
     if (nav->CheckPath(path)) {
         nav->cd(path);
@@ -45,23 +46,26 @@ void StripNoise::CreateDetIDs()
 
             if (start_index == 0){
                 int layer = stoi(name.erase(0,13));
-                TGeoNode* currentsensornode = currentdaughternode->GetDaughter(0); 
-                string sensorname = currentsensornode->GetName(); 
-                
-                int start_sensor_row_index = sensorname.find("Row_"); 
-                int start_sensor_column_index = sensorname.find("Column_"); 
-                
-                int row = stoi(sensorname.substr(4 + start_sensor_row_index, 1));
-                int column = stoi(sensorname.substr(7 + start_sensor_column_index, 1)); 
+                // Every sensor of the layer, not only the first one
+                for (int d = 0; d < currentdaughternode->GetNdaughters(); d++)
+                {
+                    string sensorname = currentdaughternode->GetDaughter(d)->GetName();
 
-                int strip = 0; 
+                    int start_sensor_row_index = sensorname.find("Row_");
+                    int start_sensor_column_index = sensorname.find("Column_");
 
-                int detid = ((layer )   << 13)
-                            | ((row     & 0x3)   << 11)
-                            | ((column  & 0x1)   << 10)
-                            |  (strip   & 0x3FF);
+                    int row = stoi(sensorname.substr(4 + start_sensor_row_index, 1));
+                    int column = stoi(sensorname.substr(7 + start_sensor_column_index, 1));
 
-                detids.push_back(detid);
+                    int strip = 0;
+
+                    int detid = ((layer )   << 13)
+                                | ((row     & 0x3)   << 11)
+                                | ((column  & 0x1)   << 10)
+                                |  (strip   & 0x3FF);
+
+                    detids.push_back(detid);
+                }
             } 
             
         }
